@@ -7,7 +7,7 @@ Type=simple
 WorkingDirectory=/mnt/projects/smart-oomd
 ExecStart=/mnt/projects/smart-oomd/.venv/bin/python -m daemon.main
 Restart=on-failure
-Environment=SMART_OOMD_DRY_RUN=true
+Environment=SMART_OOMD_DRY_RUN=false
 Environment=SMART_OOMD_THRESHOLD=15.0
 Environment=SMART_OOMD_POLL_INTERVAL=1.0
 
