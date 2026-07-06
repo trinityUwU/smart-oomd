@@ -1,8 +1,17 @@
 # TODO — smart-oomd
 
-## En cours
-- [ ] Observer le service en dry-run sur la session réelle pendant quelques jours
-      avant de désactiver `SMART_OOMD_DRY_RUN`
+## Fait récemment
+- [x] Garde-fou anti-faux-positif : `SMART_OOMD_MIN_AVAILABLE_PERCENT` (défaut 10%)
+      + `SMART_OOMD_CONFIRMATIONS` (défaut 3) — un pic de charge légitime (jeu, VM,
+      compilation) avec beaucoup de marge réelle ne déclenche plus de kill
+
+## Connu et accepté
+- Sur un cgroup à très petit budget (<1GB), les défauts (poll 1s, 3 confirmations)
+  peuvent perdre la course contre le OOM killer du kernel — il faut resserrer
+  `SMART_OOMD_POLL_INTERVAL`/`SMART_OOMD_CONFIRMATIONS` pour ce cas. Sur la
+  machine réelle de Chris (46GB), la marge de 10% (~4.6GB) laisse largement le
+  temps de confirmer sans jamais perdre cette course — non applicable en usage
+  normal.
 
 ## Backlog
 - [ ] Comparer empiriquement vs earlyoom sur une charge de test identique

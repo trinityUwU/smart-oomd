@@ -29,6 +29,12 @@ python3 -m venv .venv
 Voir `.env.example`. Variables clés :
 - `SMART_OOMD_DRY_RUN` — `true` par défaut, log les kills sans les exécuter
 - `SMART_OOMD_THRESHOLD` — secondes avant épuisement estimé qui déclenchent un kill
+- `SMART_OOMD_MIN_AVAILABLE_PERCENT` — un kill n'est envisagé que si la mémoire
+  disponible passe sous ce % du total (défaut 10%). Empêche un pic de charge
+  légitime (jeu, VM, compilation) avec plein de marge réelle de déclencher un
+  kill juste parce qu'il alloue vite.
+- `SMART_OOMD_CONFIRMATIONS` — nombre de cycles consécutifs en zone de danger
+  avant d'agir (défaut 3). Absorbe les pics isolés/bruit de mesure.
 - `SMART_OOMD_CGROUP_SCOPE` — confine la surveillance à un cgroup v2 (tests)
 
 ## Tester sans risque (cgroup isolé)

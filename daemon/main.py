@@ -11,7 +11,7 @@ from killer.executor import kill_candidate
 from monitor.history import HistoryTracker, PidHistory
 from monitor.proc_reader import (
     list_processes,
-    read_cgroup_available_kb,
+    read_cgroup_memory_kb,
     read_cgroup_pids,
     read_meminfo_kb,
 )
@@ -25,25 +25,30 @@ def _resolve_pids_filter(cgroup_scope_path: str | None) -> set[int] | None:
     return read_cgroup_pids(Path(cgroup_scope_path))
 
 
-def _read_available_kb(cgroup_scope_path: str | None) -> int:
+def _read_memory_kb(cgroup_scope_path: str | None) -> tuple[int, int]:
+    """(disponible_kb, budget_total_kb) — scope cgroup si configuré, sinon système entier."""
     if cgroup_scope_path is None:
-        return read_meminfo_kb().get("MemAvailable", 0)
+        meminfo = read_meminfo_kb()
+        return meminfo.get("MemAvailable", 0), meminfo.get("MemTotal", 0)
 
-    available = read_cgroup_available_kb(Path(cgroup_scope_path))
-    if available is not None:
-        return available
+    cgroup_memory = read_cgroup_memory_kb(Path(cgroup_scope_path))
+    if cgroup_memory is not None:
+        return cgroup_memory
 
     logger.warning(f"cgroup {cgroup_scope_path} sans memory.max — repli sur la mémoire système")
-    return read_meminfo_kb().get("MemAvailable", 0)
+    meminfo = read_meminfo_kb()
+    return meminfo.get("MemAvailable", 0), meminfo.get("MemTotal", 0)
 
 
 def run(config: DaemonConfig) -> None:
     own_pid = os.getpid()
     process_history = HistoryTracker(window_seconds=config.history_window_seconds)
     available_history = PidHistory(window_seconds=config.history_window_seconds)
+    consecutive_danger_polls = 0
 
     logger.info(
         f"smart-oomd démarré: dry_run={config.dry_run} threshold={config.exhaustion_threshold_seconds}s "
+        f"min_available={config.min_available_percent}% confirmations={config.consecutive_confirmations} "
         f"scope={config.cgroup_scope_path or 'système entier'}"
     )
 
@@ -52,28 +57,38 @@ def run(config: DaemonConfig) -> None:
             logger.info(f"scope {config.cgroup_scope_path} disparu — plus rien à surveiller, arrêt")
             return
 
-        available_kb = _read_available_kb(config.cgroup_scope_path)
+        available_kb, total_kb = _read_memory_kb(config.cgroup_scope_path)
         available_history.push(available_kb)
 
         forecast = forecast_exhaustion(available_history, available_kb)
         if forecast.seconds_remaining is not None:
             logger.debug(
                 f"tendance mémoire: {forecast.trend_kb_per_s:.0f}kB/s, "
-                f"épuisement estimé dans {forecast.seconds_remaining:.1f}s"
+                f"épuisement estimé dans {forecast.seconds_remaining:.1f}s, "
+                f"disponible {available_kb}kB/{total_kb}kB"
             )
 
         pids_filter = _resolve_pids_filter(config.cgroup_scope_path)
         processes = list_processes(pids_filter)
         process_history.prune({p.pid for p in processes})
 
-        should_act = (
+        floor_kb = total_kb * config.min_available_percent / 100
+        in_danger_zone = available_kb < floor_kb
+        predicts_exhaustion = (
             forecast.seconds_remaining is not None
             and forecast.seconds_remaining < config.exhaustion_threshold_seconds
         )
-        if should_act:
+
+        if in_danger_zone and predicts_exhaustion:
+            consecutive_danger_polls += 1
+        else:
+            consecutive_danger_polls = 0
+
+        if consecutive_danger_polls >= config.consecutive_confirmations:
             victim = select_victim(processes, process_history, own_pid)
             if victim is not None:
                 kill_candidate(victim, config.dry_run)
+                consecutive_danger_polls = 0
             else:
                 logger.warning("épuisement imminent mais aucun candidat éligible trouvé")
 
