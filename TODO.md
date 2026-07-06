@@ -17,8 +17,15 @@
   temps de confirmer sans jamais perdre cette course — non applicable en usage
   normal.
 
+## Bloqué — pas de notre fait
+- [ ] Soumission AUR réelle : **inscriptions AUR suspendues par Arch depuis
+      début juin 2026** suite à un incident de sécurité (~1500 paquets AUR
+      compromis/malveillants détectés). Le formulaire d'inscription renvoie un
+      503 volontairement — ce n'est pas un bug de notre côté, pas de
+      contournement légitime. PKGBUILD déjà corrigé et testé (`makepkg -f`
+      passe), clé SSH dédiée générée (`~/.ssh/id_ed25519_aur`), service
+      systemd de packaging en `dry_run=true` par défaut — tout est prêt.
+      Dès que Chris peut créer un compte AUR, on pousse en quelques minutes.
+
 ## Backlog
 - [ ] Comparer empiriquement vs earlyoom sur une charge de test identique
-- [ ] PKGBUILD non testé — corriger le chemin `ExecStart` en dur avant soumission AUR
-      (actuellement pointe sur /mnt/projects/smart-oomd, pas un chemin packagé)
-- [ ] Soumission AUR réelle (nécessite compte AUR + clé SSH — à faire par Chris)
