@@ -1,0 +1,22 @@
+# ARBORESCENCE — smart-oomd
+
+- `ARCHITECTURE.md` — carte des domaines et frontières
+- `README.md` — usage, config, test
+- `STATE.md` — état courant du projet
+- `TODO.md` — tâches en cours et backlog
+- `.env.example` — variables de config sans valeurs sensibles
+- `requirements.txt` — dépendances (loguru)
+- `start.sh` / `stop.sh` / `restart.sh` — cycle de vie du daemon
+- `daemon/__init__.py`
+- `daemon/config.py` — config par variables d'environnement
+- `daemon/main.py` — boucle principale, orchestre monitor/scoring/killer
+- `monitor/__init__.py`
+- `monitor/proc_reader.py` — lecture /proc (process, meminfo, cgroup)
+- `monitor/history.py` — fenêtre glissante + régression linéaire
+- `scoring/__init__.py`
+- `scoring/criticality.py` — liste des process protégés
+- `scoring/predictor.py` — prédiction du temps avant épuisement mémoire
+- `scoring/scorer.py` — score composite et sélection de la victime
+- `killer/__init__.py`
+- `killer/executor.py` — exécution du kill (SIGTERM), loggée
+- `scripts/test_cgroup.sh` — harnais de test isolé (cgroup v2 + stress-ng)
