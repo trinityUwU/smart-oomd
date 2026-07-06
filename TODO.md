@@ -1,10 +1,11 @@
 # TODO — smart-oomd
 
 ## En cours
-- [ ] Valider le comportement en cgroup isolé (`scripts/test_cgroup.sh`)
+- [ ] Observer le service en dry-run sur la session réelle pendant quelques jours
+      avant de désactiver `SMART_OOMD_DRY_RUN`
 
 ## Backlog
-- [ ] Unité tests pour `HistoryTracker`/`select_victim` (pytest)
-- [ ] systemd unit file pour lancer smart-oomd au boot (après validation manuelle)
-- [ ] Packaging AUR si le comportement se confirme fiable
 - [ ] Comparer empiriquement vs earlyoom sur une charge de test identique
+- [ ] PKGBUILD non testé — corriger le chemin `ExecStart` en dur avant soumission AUR
+      (actuellement pointe sur /mnt/projects/smart-oomd, pas un chemin packagé)
+- [ ] Soumission AUR réelle (nécessite compte AUR + clé SSH — à faire par Chris)

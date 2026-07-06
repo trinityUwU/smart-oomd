@@ -37,9 +37,30 @@ Voir `.env.example`. Variables clés :
 ./scripts/test_cgroup.sh
 ```
 
-Crée un cgroup v2 limité en mémoire, y lance `stress-ng` pour simuler une fuite,
-et affiche la commande pour lancer le daemon scopé à ce seul cgroup. Le kill
-préventif ne peut affecter que les process du cgroup de test.
+Crée un scope `systemd --user` limité en mémoire (sans root), y simule une
+fuite mémoire progressive (`scripts/leak_sim.py`), et lance le daemon scopé à
+ce seul cgroup. Le kill préventif ne peut affecter que ce process de test.
+
+## Installer comme service (dry-run par défaut)
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/smart-oomd.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now smart-oomd.service
+journalctl --user -u smart-oomd -f
+```
+
+Par défaut `SMART_OOMD_DRY_RUN=true` — le service log ce qu'il *aurait* tué
+sans rien tuer réellement. Passe à `false` dans le fichier unit une fois que
+tu as observé son comportement sur ta session pendant quelques jours.
+
+## Tests
+
+```bash
+.venv/bin/pip install pytest
+.venv/bin/python -m pytest tests/
+```
 
 ## Stack
 

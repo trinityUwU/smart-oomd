@@ -19,4 +19,10 @@
 - `scoring/scorer.py` — score composite et sélection de la victime
 - `killer/__init__.py`
 - `killer/executor.py` — exécution du kill (SIGTERM), loggée
-- `scripts/test_cgroup.sh` — harnais de test isolé (cgroup v2 + stress-ng)
+- `scripts/test_cgroup.sh` — harnais de test isolé (systemd-run --user, sans sudo)
+- `scripts/leak_sim.py` — simulateur de fuite mémoire progressive pour les tests
+- `tests/test_history.py` — tests de la régression linéaire et du pruning
+- `tests/test_scorer.py` — tests de la sélection de victime et de la protection
+- `systemd/smart-oomd.service` — unit systemd --user (dry-run par défaut)
+- `PKGBUILD` — ébauche packaging AUR (non fonctionnel tel quel, voir TODO.md)
+- `LICENSE` — MIT
