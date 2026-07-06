@@ -37,6 +37,18 @@ Voir `.env.example`. Variables clés :
   avant d'agir (défaut 3). Absorbe les pics isolés/bruit de mesure.
 - `SMART_OOMD_CGROUP_SCOPE` — confine la surveillance à un cgroup v2 (tests)
 
+## Détection de ralentissement (pas juste un seuil)
+
+Un pic de charge légitime (jeu qui charge son monde, VM qui démarre,
+compilation) peut allouer beaucoup et vite, sans jamais être dangereux — la
+courbe ralentit et se stabilise en plateau. Une fuite réelle, elle, ne ralentit
+pas. `smart-oomd` compare la pente de croissance de la première moitié de sa
+fenêtre glissante à celle de la seconde moitié : si la perte de mémoire
+ralentit, aucune action n'est prise même si l'usage absolu est énorme (ex:
+Minecraft à 25GB) et même si la mémoire disponible passe sous le plancher.
+Seule une croissance qui reste constante ou qui s'accélère est traitée comme
+une menace réelle.
+
 ## Tester sans risque (cgroup isolé)
 
 ```bash

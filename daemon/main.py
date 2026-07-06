@@ -79,9 +79,11 @@ def run(config: DaemonConfig) -> None:
             and forecast.seconds_remaining < config.exhaustion_threshold_seconds
         )
 
-        if in_danger_zone and predicts_exhaustion:
+        if in_danger_zone and predicts_exhaustion and not forecast.is_decelerating:
             consecutive_danger_polls += 1
         else:
+            if forecast.is_decelerating and in_danger_zone:
+                logger.debug("croissance en ralentissement — plateau probable, pas d'action")
             consecutive_danger_polls = 0
 
         if consecutive_danger_polls >= config.consecutive_confirmations:

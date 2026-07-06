@@ -20,8 +20,11 @@
 - `killer/__init__.py`
 - `killer/executor.py` — exécution du kill (SIGTERM), loggée
 - `scripts/test_cgroup.sh` — harnais de test isolé (systemd-run --user, sans sudo)
+- `scripts/test_multi_victim.sh` — scénario deux fuites concurrentes (rapide vs lente)
 - `scripts/leak_sim.py` — simulateur de fuite mémoire progressive pour les tests
-- `tests/test_history.py` — tests de la régression linéaire et du pruning
+- `scripts/plateau_sim.py` — simulateur de croissance légitime qui ralentit (jeu/VM)
+- `tests/test_history.py` — tests de la régression linéaire, du pruning et de la courbure
+- `tests/test_predictor.py` — tests de la détection de ralentissement (is_decelerating)
 - `tests/test_scorer.py` — tests de la sélection de victime et de la protection
 - `systemd/smart-oomd.service` — unit systemd --user (dry-run par défaut)
 - `PKGBUILD` — ébauche packaging AUR (non fonctionnel tel quel, voir TODO.md)

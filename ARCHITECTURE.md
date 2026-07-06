@@ -24,7 +24,15 @@ unique, jamais l'inverse.
 1. Tendance mémoire système : régression linéaire sur `MemAvailable` (fenêtre
    glissante `SMART_OOMD_HISTORY_WINDOW`) → pente kB/s.
 2. Si la pente est négative, extrapolation du temps avant épuisement complet.
-3. Si ce temps passe sous `SMART_OOMD_THRESHOLD`, sélection de la victime :
-   score = 0.6 × croissance_normalisée + 0.4 × taille_normalisée, parmi les
-   process non protégés (pid 1, oom_score_adj ≤ -1000, liste de noms critiques).
-4. Kill SIGTERM du meilleur candidat, ou dry-run log si `SMART_OOMD_DRY_RUN=true`.
+3. Détection de courbure : pente de la première moitié de la fenêtre vs pente
+   de la seconde moitié. Si la perte ralentit (`recent_slope > older_slope`,
+   les deux négatives), la croissance est taguée `is_decelerating` — usage
+   légitime qui approche un plateau, jamais une cible.
+4. Un kill n'est envisagé que si les 3 conditions sont réunies :
+   mémoire disponible sous `SMART_OOMD_MIN_AVAILABLE_PERCENT` du total,
+   épuisement prédit sous `SMART_OOMD_THRESHOLD`, et **pas** `is_decelerating`.
+   Doit rester vrai `SMART_OOMD_CONFIRMATIONS` cycles consécutifs (anti-bruit).
+5. Sélection de la victime : score = 0.6 × croissance_normalisée +
+   0.4 × taille_normalisée, parmi les process non protégés (pid 1,
+   oom_score_adj ≤ -1000, liste de noms critiques).
+6. Kill SIGTERM du meilleur candidat, ou dry-run log si `SMART_OOMD_DRY_RUN=true`.
