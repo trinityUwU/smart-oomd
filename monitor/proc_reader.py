@@ -84,3 +84,17 @@ def read_cgroup_pids(cgroup_path: Path) -> set[int]:
     except (FileNotFoundError, PermissionError, ValueError) as exc:
         logger.error(f"lecture cgroup.procs échouée pour {cgroup_path}: {exc}")
         return set()
+
+
+def read_cgroup_available_kb(cgroup_path: Path) -> int | None:
+    """Mémoire encore disponible dans le budget du cgroup (memory.max - memory.current)."""
+    try:
+        current_kb = int((cgroup_path / "memory.current").read_text().strip()) // 1024
+        max_raw = (cgroup_path / "memory.max").read_text().strip()
+        if max_raw == "max":
+            return None
+        max_kb = int(max_raw) // 1024
+        return max(max_kb - current_kb, 0)
+    except (FileNotFoundError, PermissionError, ValueError) as exc:
+        logger.error(f"lecture memory.current/memory.max échouée pour {cgroup_path}: {exc}")
+        return None

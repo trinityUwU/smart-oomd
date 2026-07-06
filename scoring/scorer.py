@@ -26,7 +26,6 @@ def _normalize(value: float, max_value: float) -> float:
 def select_victim(
     processes: list[ProcessSample],
     history: HistoryTracker,
-    total_mem_kb: int,
     own_pid: int,
 ) -> ScoredCandidate | None:
     eligible = [p for p in processes if not is_protected(p.pid, p.name, p.oom_score_adj, own_pid)]

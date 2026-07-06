@@ -9,7 +9,12 @@ from loguru import logger
 from daemon.config import DaemonConfig
 from killer.executor import kill_candidate
 from monitor.history import HistoryTracker, PidHistory
-from monitor.proc_reader import list_processes, read_cgroup_pids, read_meminfo_kb
+from monitor.proc_reader import (
+    list_processes,
+    read_cgroup_available_kb,
+    read_cgroup_pids,
+    read_meminfo_kb,
+)
 from scoring.predictor import forecast_exhaustion
 from scoring.scorer import select_victim
 
@@ -18,6 +23,18 @@ def _resolve_pids_filter(cgroup_scope_path: str | None) -> set[int] | None:
     if cgroup_scope_path is None:
         return None
     return read_cgroup_pids(Path(cgroup_scope_path))
+
+
+def _read_available_kb(cgroup_scope_path: str | None) -> int:
+    if cgroup_scope_path is None:
+        return read_meminfo_kb().get("MemAvailable", 0)
+
+    available = read_cgroup_available_kb(Path(cgroup_scope_path))
+    if available is not None:
+        return available
+
+    logger.warning(f"cgroup {cgroup_scope_path} sans memory.max — repli sur la mémoire système")
+    return read_meminfo_kb().get("MemAvailable", 0)
 
 
 def run(config: DaemonConfig) -> None:
@@ -31,8 +48,11 @@ def run(config: DaemonConfig) -> None:
     )
 
     while True:
-        meminfo = read_meminfo_kb()
-        available_kb = meminfo.get("MemAvailable", 0)
+        if config.cgroup_scope_path is not None and not Path(config.cgroup_scope_path).exists():
+            logger.info(f"scope {config.cgroup_scope_path} disparu — plus rien à surveiller, arrêt")
+            return
+
+        available_kb = _read_available_kb(config.cgroup_scope_path)
         available_history.push(available_kb)
 
         forecast = forecast_exhaustion(available_history, available_kb)
@@ -51,7 +71,7 @@ def run(config: DaemonConfig) -> None:
             and forecast.seconds_remaining < config.exhaustion_threshold_seconds
         )
         if should_act:
-            victim = select_victim(processes, process_history, meminfo.get("MemTotal", 0), own_pid)
+            victim = select_victim(processes, process_history, own_pid)
             if victim is not None:
                 kill_candidate(victim, config.dry_run)
             else:
