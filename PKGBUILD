@@ -22,7 +22,7 @@ package() {
     cd "$pkgname"
     install -dm755 "$pkgdir/usr/lib/smart-oomd"
     cp -r monitor scoring killer daemon "$pkgdir/usr/lib/smart-oomd/"
-    install -Dm644 systemd/smart-oomd.service "$pkgdir/usr/lib/systemd/user/smart-oomd.service"
+    install -Dm644 systemd/smart-oomd-aur.service "$pkgdir/usr/lib/systemd/user/smart-oomd.service"
     install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
 }

@@ -1,0 +1,15 @@
+[Unit]
+Description=smart-oomd — kill mémoire préventif par prédiction de tendance
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/lib/smart-oomd
+ExecStart=/usr/bin/python3 -m daemon.main
+Restart=on-failure
+Environment=SMART_OOMD_DRY_RUN=true
+Environment=SMART_OOMD_THRESHOLD=15.0
+Environment=SMART_OOMD_POLL_INTERVAL=1.0
+
+[Install]
+WantedBy=default.target
